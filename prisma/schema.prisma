@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+enum UserRole {
+  STUDENT
+  MENTOR
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  COMPLETED
+  CANCELLED
+}
+
+enum AvailabilityStatus {
+  AVAILABLE
+  LIMITED
+  UNAVAILABLE
+}
+
+model UserProfile {
+  id          String   @id @default(cuid())
+  authUserId  String   @unique
+  name        String
+  email       String   @unique
+  role        UserRole @default(STUDENT)
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  mentorProfile   MentorProfile?
+  bookingRequests BookingRequest[] @relation("StudentBookingRequests")
+  forumPosts      ForumPost[]
+  forumReplies    ForumReply[]
+}
+
+model MentorProfile {
+  id                 String             @id @default(cuid())
+  userId             String             @unique
+  domain             String
+  experienceYears    Int
+  headline           String
+  bio                String
+  availabilityStatus AvailabilityStatus @default(AVAILABLE)
+  availabilityNote   String?
+  isActive           Boolean            @default(true)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  user            UserProfile      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookingRequests BookingRequest[]
+}
+
+model BookingRequest {
+  id           String        @id @default(cuid())
+  studentId    String
+  mentorId     String
+  topic        String
+  message      String
+  preferredAt  DateTime?
+  status       BookingStatus @default(PENDING)
+  responseNote String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  student UserProfile   @relation("StudentBookingRequests", fields: [studentId], references: [id], onDelete: Cascade)
+  mentor  MentorProfile @relation(fields: [mentorId], references: [id], onDelete: Cascade)
+}
+
+model ForumPost {
+  id        String   @id @default(cuid())
+  authorId  String
+  title     String
+  content   String
+  tag       String?
+  isPinned  Boolean  @default(false)
+  isLocked  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author  UserProfile  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  replies ForumReply[]
+}
+
+model ForumReply {
+  id        String   @id @default(cuid())
+  postId    String
+  authorId  String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  post   ForumPost   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author UserProfile @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
