@@ -134,7 +134,7 @@ export default function AppSidebar({ userProfile }: AppSidebarProps) {
             href="/mentors"
             className={buttonVariants({
               variant: "default",
-              className: "w-full bg-[#5c4df0] hover:bg-[#4b3de0] text-white flex items-center justify-center gap-2 font-medium",
+              className: "w-full bg-[#4f46e5] hover:bg-[#4338ca] text-white flex items-center justify-center gap-2 font-medium",
             })}
           >
             <Plus className="h-4 w-4" />
