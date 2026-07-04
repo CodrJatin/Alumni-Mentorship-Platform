@@ -41,7 +41,11 @@ export default function LoginForm() {
       if (result.success) {
         toast.success("Welcome back! Signed in successfully.");
         router.refresh();
-        router.push(redirectTo);
+        if (data.email === "admin@alumentor.com") {
+          router.push("/admin");
+        } else {
+          router.push(redirectTo);
+        }
       } else {
         toast.error(result.error || "Authentication failed.");
       }

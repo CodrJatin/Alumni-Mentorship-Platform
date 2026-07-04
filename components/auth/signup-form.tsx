@@ -39,7 +39,7 @@ export default function SignupForm() {
     try {
       const result = await signUpWithEmail(data);
       if (result.success) {
-        toast.success("Account created successfully! Welcome to EliteMentorship.");
+        toast.success("Account created successfully! Welcome to AluMentor.");
         router.refresh();
         router.push("/dashboard");
       } else {

@@ -23,7 +23,7 @@ export default function SignupPage() {
           className="relative z-10"
         >
           <h1 className="text-4xl font-bold tracking-tight text-[#171717]">
-            EliteMentorship
+            AluMentor
           </h1>
           <p className="mt-2 text-base text-muted-foreground font-medium">
             Academic Professionalism Guaranteed.
@@ -49,7 +49,7 @@ export default function SignupPage() {
 
         {/* Footer info in left panel */}
         <div className="relative z-10 text-xs text-muted-foreground">
-          © {new Date().getFullYear()} EliteMentorship. All rights reserved.
+          © {new Date().getFullYear()} AluMentor. All rights reserved.
         </div>
       </section>
 
@@ -80,7 +80,7 @@ export default function SignupPage() {
           {/* Form Header */}
           <div className="space-y-2 mb-8">
             <h2 className="text-3xl font-bold tracking-tight text-foreground">
-              Join EliteMentorship
+              Join AluMentor
             </h2>
             <p className="text-sm text-muted-foreground font-medium">
               Create your institutional account to start your journey.

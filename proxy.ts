@@ -1,6 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
-import prisma from "@/lib/db/prisma";
 
 export async function proxy(request: NextRequest) {
   // 1. Refresh Supabase session
@@ -14,36 +13,31 @@ export async function proxy(request: NextRequest) {
     "/reset-password",
   ].some((path) => pathname === path);
 
+  const adminEmail = process.env.ADMIN_EMAIL || "admin@alumentor.com";
+  const isAdmin = user?.email === adminEmail;
+
   const isProtectedPage =
     pathname.startsWith("/dashboard") || pathname === "/forum/new";
-  const isAdminPage = pathname.startsWith("/dashboard/users");
+  const isAdminPage = pathname.startsWith("/admin");
 
   if (user) {
-    // If user is authenticated and visits an auth page, redirect to /dashboard
+    // If user is authenticated and visits an auth page, redirect to correct landing console
     if (isAuthPage) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return NextResponse.redirect(new URL(isAdmin ? "/admin" : "/dashboard", request.url));
     }
 
     // Role-based protection for Admin routes
-    if (isAdminPage) {
-      try {
-        const profile = await prisma.userProfile.findUnique({
-          where: { authUserId: user.id },
-          select: { role: true },
-        });
+    if (isAdminPage && !isAdmin) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
 
-        if (profile?.role !== "ADMIN") {
-          return NextResponse.redirect(new URL("/dashboard", request.url));
-        }
-      } catch (error) {
-        console.error("Error checking user role in proxy:", error);
-        // Fallback safety redirect
-        return NextResponse.redirect(new URL("/dashboard", request.url));
-      }
+    // Redirect admin trying to access standard dashboard pages
+    if (isProtectedPage && isAdmin) {
+      return NextResponse.redirect(new URL("/admin", request.url));
     }
   } else {
-    // If user is not authenticated and visits a protected page, redirect to /login
-    if (isProtectedPage) {
+    // If user is not authenticated and visits a protected or admin page, redirect to /login
+    if (isProtectedPage || isAdminPage) {
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("next", pathname);
       return NextResponse.redirect(loginUrl);
@@ -61,8 +55,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - Any extension assets (svg, png, jpg, etc.)
+     * Feel free to modify this pattern to include more paths.
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
   ],
 };

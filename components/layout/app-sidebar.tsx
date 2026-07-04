@@ -11,9 +11,9 @@ import {
   GraduationCap,
   Clock,
   MessageSquare,
-  Shield,
   Plus,
 } from "lucide-react";
+import { useSidebar } from "@/components/layout/sidebar-context";
 import { UserRole } from "@prisma/client";
 
 interface AppSidebarProps {
@@ -27,6 +27,7 @@ interface AppSidebarProps {
 
 export default function AppSidebar({ userProfile }: AppSidebarProps) {
   const pathname = usePathname();
+  const { isOpen, close } = useSidebar();
 
   const menuItems = [
     {
@@ -41,7 +42,7 @@ export default function AppSidebar({ userProfile }: AppSidebarProps) {
     },
     {
       name: "Mentors",
-      href: "/dashboard/mentors",
+      href: "/mentors",
       icon: GraduationCap,
     },
     {
@@ -50,81 +51,76 @@ export default function AppSidebar({ userProfile }: AppSidebarProps) {
       icon: Clock,
     },
     {
-      name: "Forum",
+      name: "My Forums",
       href: "/dashboard/forum",
       icon: MessageSquare,
     },
   ];
 
-  const showManagement = userProfile?.role === UserRole.ADMIN;
   const isStudent = userProfile?.role === UserRole.STUDENT;
 
   return (
-    <aside className="w-64 border-r border-border bg-background flex flex-col h-[calc(100vh-4rem)] sticky top-16">
-      {/* Top: Welcome User Block */}
-      <div className="p-6 flex items-center gap-3">
-        <Avatar className="h-10 w-10 border border-border">
-          <AvatarImage
-            src={userProfile?.imageUrl || ""}
-            alt={userProfile?.name || "Avatar"}
-          />
-          <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-            {userProfile?.name?.charAt(0).toUpperCase() || "U"}
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex flex-col min-w-0">
-          <span className="text-xs text-muted-foreground font-medium">
-            Welcome back
-          </span>
-          <span className="text-sm font-semibold text-foreground truncate">
-            {userProfile?.name || "Academic Portal"}
-          </span>
+    <>
+      {/* Mobile backdrop overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          onClick={close}
+        />
+      )}
+
+      <aside
+        className={`w-64 border-r border-[#E2E8F0] bg-white flex flex-col fixed top-16 bottom-0 left-0 transition-transform duration-300 ease-in-out z-40
+          ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+        `}
+      >
+        {/* Top: Welcome User Block */}
+        <div className="p-6 flex items-center gap-3">
+          <Avatar className="h-10 w-10 border border-border">
+            <AvatarImage
+              src={userProfile?.imageUrl || ""}
+              alt={userProfile?.name || "Avatar"}
+            />
+            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+              {userProfile?.name?.charAt(0).toUpperCase() || "U"}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col min-w-0">
+            <span className="text-xs text-muted-foreground font-medium">
+              Welcome back
+            </span>
+            <span className="text-sm font-semibold text-foreground truncate">
+              {userProfile?.name || "Academic Portal"}
+            </span>
+          </div>
         </div>
-      </div>
 
-      <Separator />
+        <Separator />
 
-      {/* Navigation Menu */}
-      <nav className="flex-1 px-4 py-6 space-y-1">
-        {menuItems.map((item) => {
-          const isActive = pathname === item.href;
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                isActive
-                  ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              <Icon className="h-5 w-5 flex-shrink-0" />
-              {item.name}
-            </Link>
-          );
-        })}
+        {/* Navigation Menu */}
+        <nav className="flex-1 px-4 py-6 space-y-1">
+          {menuItems.map((item) => {
+            const isActive =
+              pathname === item.href ||
+              (item.href === "/forum" && (pathname === "/forum" || pathname.startsWith("/forum/") || pathname.startsWith("/dashboard/forum")));
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                onClick={close}
+                className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  isActive
+                    ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                <Icon className="h-5 w-5 flex-shrink-0" />
+                {item.name}
+              </Link>
+            );
+          })}
 
-        {showManagement && (
-          <>
-            <div className="pt-4 pb-1">
-              <span className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Admin
-              </span>
-            </div>
-            <Link
-              href="/dashboard/users"
-              className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                pathname === "/dashboard/users"
-                  ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              <Shield className="h-5 w-5 flex-shrink-0" />
-              Management
-            </Link>
-          </>
-        )}
       </nav>
 
       {/* Bottom Action Button (Student-focused, but visible based on design image) */}
@@ -147,5 +143,6 @@ export default function AppSidebar({ userProfile }: AppSidebarProps) {
         )}
       </div>
     </aside>
-  );
+  </>
+);
 }

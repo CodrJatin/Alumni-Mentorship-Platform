@@ -9,7 +9,6 @@ datasource db {
 enum UserRole {
   STUDENT
   MENTOR
-  ADMIN
 }
 
 enum BookingStatus {
@@ -33,13 +32,21 @@ model UserProfile {
   email       String   @unique
   role        UserRole @default(STUDENT)
   imageUrl    String?
+  isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  major           String?
+  yearOfStudy     String?
+  bio             String?          @db.Text
+  skills          String[]         @default([])
+  linkedinUrl     String?
 
   mentorProfile   MentorProfile?
   bookingRequests BookingRequest[] @relation("StudentBookingRequests")
   forumPosts      ForumPost[]
   forumReplies    ForumReply[]
+  savedPosts      SavedPost[]
 }
 
 model MentorProfile {
@@ -49,14 +56,32 @@ model MentorProfile {
   experienceYears    Int
   headline           String
   bio                String
+  institution        String?
+  skills             String[]           @default([])
   availabilityStatus AvailabilityStatus @default(AVAILABLE)
   availabilityNote   String?
   isActive           Boolean            @default(true)
+  isFeatured         Boolean            @default(false)
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
-  user            UserProfile      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  bookingRequests BookingRequest[]
+  user              UserProfile       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bookingRequests   BookingRequest[]
+  backgroundEntries BackgroundEntry[]
+}
+
+model BackgroundEntry {
+  id              String   @id @default(cuid())
+  mentorProfileId String
+  title           String
+  institution     String
+  startYear       String
+  endYear         String
+  description     String?  @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  mentorProfile MentorProfile @relation(fields: [mentorProfileId], references: [id], onDelete: Cascade)
 }
 
 model BookingRequest {
@@ -86,8 +111,9 @@ model ForumPost {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  author  UserProfile  @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  replies ForumReply[]
+  author    UserProfile  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  replies   ForumReply[]
+  savedBy   SavedPost[]
 }
 
 model ForumReply {
@@ -100,4 +126,16 @@ model ForumReply {
 
   post   ForumPost   @relation(fields: [postId], references: [id], onDelete: Cascade)
   author UserProfile @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model SavedPost {
+  id        String   @id @default(cuid())
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+
+  user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post ForumPost   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
 }

@@ -70,7 +70,50 @@ export async function signInWithEmail(data: LoginInput) {
 
     const supabase = await createClient();
 
-    // Sign in via Supabase Auth
+    // Custom check for admin@alumentor.com
+    const adminEmail = process.env.ADMIN_EMAIL || "admin@alumentor.com";
+    if (email === adminEmail) {
+      const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
+      if (password !== adminPassword) {
+        return { success: false, error: "Invalid credentials." };
+      }
+
+      // Try to sign in to Supabase first
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        // Create user in Supabase Auth on the fly if sign-in fails (e.g. user does not exist yet)
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              name: "System Admin",
+            },
+          },
+        });
+
+        if (signUpError) {
+          return { success: false, error: `Admin initialization failed: ${signUpError.message}` };
+        }
+
+        // Try to sign in again after creating
+        const retryRes = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (retryRes.error) {
+          return { success: false, error: retryRes.error.message };
+        }
+      }
+
+      return { success: true };
+    }
+
+    // Normal sign in via Supabase Auth
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
