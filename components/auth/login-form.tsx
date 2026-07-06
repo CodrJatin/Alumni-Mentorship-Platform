@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -17,9 +17,32 @@ export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
+  const handledAuthErrorRef = useRef<string | null>(null);
 
   // Read "next" redirect param or default to dashboard
-  const redirectTo = searchParams.get("next") ?? "/dashboard";
+  const redirectTo = useMemo(() => {
+    const next = searchParams.get("next");
+    return next?.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
+  }, [searchParams]);
+  const authError = searchParams.get("error");
+
+  useEffect(() => {
+    if (!authError) return;
+    if (handledAuthErrorRef.current === authError) return;
+    handledAuthErrorRef.current = authError;
+
+    const message =
+      authError === "auth-code-exchange-failed"
+        ? "We could not complete authentication. Please sign in again."
+        : "Authentication failed. Please try again.";
+
+    toast.error(message);
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("error");
+    const query = params.toString();
+    router.replace(query ? `/login?${query}` : "/login");
+  }, [authError, router, searchParams]);
 
   const {
     register,
@@ -40,12 +63,7 @@ export default function LoginForm() {
       const result = await signInWithEmail(data);
       if (result.success) {
         toast.success("Welcome back! Signed in successfully.");
-        router.refresh();
-        if (data.email === "admin@alumentor.com") {
-          router.push("/admin");
-        } else {
-          router.push(redirectTo);
-        }
+        router.replace(data.email === "admin@alumentor.com" ? "/admin" : redirectTo);
       } else {
         toast.error(result.error || "Authentication failed.");
       }

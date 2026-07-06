@@ -30,8 +30,7 @@ export default function AppHeader({ user, profile }: AppHeaderProps) {
       toast.error("Failed to sign out");
     } else {
       toast.success("Signed out successfully");
-      router.refresh();
-      router.push("/");
+      router.replace("/");
     }
   };
 

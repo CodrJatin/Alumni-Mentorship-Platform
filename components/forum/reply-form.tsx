@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { forumReplySchema, ForumReplyInput } from "@/lib/validations/forum";
 import { createForumReplyAction } from "@/lib/actions/forum.actions";
@@ -28,10 +28,10 @@ export default function ReplyForm({ postId, userProfile }: ReplyFormProps) {
 
   const {
     register,
+    control,
     handleSubmit,
     reset,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<ForumReplyInput>({
     resolver: zodResolver(forumReplySchema),
@@ -40,7 +40,7 @@ export default function ReplyForm({ postId, userProfile }: ReplyFormProps) {
     },
   });
 
-  const contentValue = watch("content");
+  const contentValue = useWatch({ control, name: "content" });
 
   const onSubmit = async (data: ForumReplyInput) => {
     setIsSubmitting(true);

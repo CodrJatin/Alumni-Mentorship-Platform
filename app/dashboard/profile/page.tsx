@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import MentorProfileForm from "@/components/mentors/mentor-profile-form";
 import StudentProfileForm from "@/components/dashboard/student-profile-form";
 import { UserRole } from "@prisma/client";
+import { ensureUserProfile } from "@/lib/auth/ensure-user-profile";
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -16,9 +17,15 @@ export default async function ProfilePage() {
     redirect("/login");
   }
 
+  const baseProfile = await ensureUserProfile(user);
+
+  if (!baseProfile) {
+    redirect("/login");
+  }
+
   // Fetch full profile and mentor relationship details
   const profile = await prisma.userProfile.findUnique({
-    where: { authUserId: user.id },
+    where: { id: baseProfile.id },
     include: {
       mentorProfile: {
         include: {

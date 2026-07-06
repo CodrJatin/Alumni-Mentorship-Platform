@@ -1,7 +1,7 @@
 import AppSidebar from "@/components/layout/app-sidebar";
 import { createClient } from "@/lib/supabase/server";
-import prisma from "@/lib/db/prisma";
 import { redirect } from "next/navigation";
+import { ensureUserProfile } from "@/lib/auth/ensure-user-profile";
 
 export default async function DashboardLayout({
   children,
@@ -17,9 +17,7 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  const profile = await prisma.userProfile.findUnique({
-    where: { authUserId: user.id },
-  });
+  const profile = await ensureUserProfile(user);
 
   if (!profile) {
     redirect("/login");

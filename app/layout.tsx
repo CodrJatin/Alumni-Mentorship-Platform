@@ -3,8 +3,9 @@ import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AppHeader from "@/components/layout/app-header";
 import { createClient } from "@/lib/supabase/server";
-import prisma from "@/lib/db/prisma";
 import { SidebarProvider } from "@/components/layout/sidebar-context";
+import { Toaster } from "@/components/ui/sonner";
+import { ensureUserProfile } from "@/lib/auth/ensure-user-profile";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -34,9 +35,7 @@ export default async function RootLayout({
     const { data } = await supabase.auth.getUser();
     user = data.user;
     if (user) {
-      profile = await prisma.userProfile.findUnique({
-        where: { authUserId: user.id },
-      });
+      profile = await ensureUserProfile(user);
     }
   } catch (err) {
     console.error("Error fetching session in root layout:", err);
@@ -52,6 +51,7 @@ export default async function RootLayout({
           <AppHeader user={user} profile={profile} />
           {children}
         </SidebarProvider>
+        <Toaster richColors closeButton position="top-right" />
       </body>
     </html>
   );

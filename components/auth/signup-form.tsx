@@ -40,8 +40,7 @@ export default function SignupForm() {
       const result = await signUpWithEmail(data);
       if (result.success) {
         toast.success("Account created successfully! Welcome to AluMentor.");
-        router.refresh();
-        router.push("/dashboard");
+        router.replace("/dashboard");
       } else {
         toast.error(result.error || "Signup failed.");
       }

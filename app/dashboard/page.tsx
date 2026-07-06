@@ -6,6 +6,7 @@ import AnimatedFadeIn from "@/components/ui/animated-fade-in";
 import { UserRole } from "@prisma/client";
 import { CalendarRange, MessageSquareCode, UserCircle2, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { ensureUserProfile } from "@/lib/auth/ensure-user-profile";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -22,8 +23,14 @@ export default async function DashboardPage() {
     redirect("/admin");
   }
 
+  const baseProfile = await ensureUserProfile(user);
+
+  if (!baseProfile) {
+    redirect("/login");
+  }
+
   const profile = await prisma.userProfile.findUnique({
-    where: { authUserId: user.id },
+    where: { id: baseProfile.id },
     include: {
       mentorProfile: true,
     },

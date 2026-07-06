@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { forumPostSchema, ForumPostInput } from "@/lib/validations/forum";
 import { createForumPostAction } from "@/lib/actions/forum.actions";
@@ -35,9 +35,9 @@ export default function NewForumPostPage() {
 
   const {
     register,
+    control,
     handleSubmit,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<ForumPostInput>({
     resolver: zodResolver(forumPostSchema),
@@ -48,7 +48,7 @@ export default function NewForumPostPage() {
     },
   });
 
-  const contentValue = watch("content");
+  const contentValue = useWatch({ control, name: "content" });
 
   const onSubmit = async (data: ForumPostInput) => {
     setIsSubmitting(true);
